@@ -210,29 +210,60 @@ export default {
     },
 
     async submitForm() {
-      if (!this.name || !this.email || !this.message) {
-        this.showNotification("Please fill in all fields", "error")
-        return
-      }
 
-      if (this.message.length > 500) {
-        this.showNotification("Message must be less than 500 characters", "error")
-        return
-      }
+  if (!this.name || !this.email || !this.message) {
+    this.showNotification("Please fill in all fields", "error");
+    return;
+  }
 
-      this.isLoading = true;
+  if (this.message.length > 500) {
+    this.showNotification("Message too long (500 max)", "error");
+    return;
+  }
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+  this.isLoading = true;
 
-      this.showNotification(`Thank you ${this.name}, your message has been sent successfully! We'll get back to you within 24 hours.`, 'success')
-      
-      this.name = '';
-      this.email = '';
-      this.message = '';
-      this.isLoading = false;
-    },
-  },
+  try {
+
+    const res = await fetch("http://localhost:3000/api/contact", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        name: this.name,
+        email: this.email,
+        message: this.message
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+
+      this.showNotification(
+        `Thank you ${this.name}, your message was sent successfully!`,
+        "success"
+      );
+
+      this.name = "";
+      this.email = "";
+      this.message = "";
+
+    } else {
+      this.showNotification(data.message, "error");
+    }
+
+  } catch(e) {
+
+    console.error(e);
+    this.showNotification("Email server is unreachable", "error");
+
+  } finally {
+    this.isLoading = false;
+  }
+}
+  }
 }
 </script>
 

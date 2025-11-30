@@ -153,13 +153,13 @@ onUnmounted(() => {
           </a>
         </li>
         <li>
-          <a @click.prevent="setView('contact')" :class="{ active: currentView==='contact' }">
+          <a @click.prevent="navigateTo('contact')" :class="{ active: $route.name === 'contact' }">
             <span class="nav-link-inner">Contact</span>
           </a>
         </li>
       </ul>
       
-      <div class="header-actions">``
+      <div class="header-actions">
         <!-- User Dropdown -->
         <div class="user-dropdown" @click="toggleUserDropdown">
           <div class="user-info">

@@ -807,6 +807,7 @@ export default {
 .summary-value {
   font-size: 28px;
   font-weight: 700;
+  text-align: center;
   color: #0a3c2b;
   line-height: 1;
 }

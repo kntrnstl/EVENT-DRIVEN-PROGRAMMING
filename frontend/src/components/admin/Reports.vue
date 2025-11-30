@@ -81,6 +81,65 @@
       </div>
     </div>
 
+    <!-- Recent Orders Section -->
+    <div class="orders-section">
+      <div class="section-header">
+        <h2>Recent Orders</h2>
+        <button class="btn btn-secondary" @click="loadOrders">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 4V16C4 17.1046 4.89543 18 6 18H20M20 18L16 14M20 18L16 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Refresh
+        </button>
+      </div>
+      
+      <div class="orders-table-container">
+        <table class="orders-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Date</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="order in orders" :key="order.id">
+              <td class="order-id">#{{ order.id }}</td>
+              <td class="customer-name">{{ order.customer_name }}</td>
+              <td class="order-date">{{ formatDate(order.created_at) }}</td>
+              <td class="order-amount">₱{{ order.total_amount.toLocaleString() }}</td>
+              <td class="order-status">
+                <span :class="['status-badge', `status-${order.status}`]">
+                  {{ order.status }}
+                </span>
+              </td>
+              <td class="order-actions">
+                <button class="btn-icon" @click="viewOrder(order.id)" title="View Details">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+            <tr v-if="orders.length === 0">
+              <td colspan="6" class="no-orders">
+                <div class="empty-state">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 9H21M9 21V9M5 5H19C20.1046 5 21 5.89543 21 7V17C21 18.1046 20.1046 19 19 19H5C3.89543 19 3 18.1046 3 17V7C3 5.89543 3.89543 5 5 5Z" stroke="#4a7c6d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <p>No orders found</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- Charts Section -->
     <div class="charts-section">
       <!-- Monthly Sales Chart -->
@@ -178,6 +237,7 @@ export default {
       monthlySales: [],
       dailySales: [],
       topProducts: [],
+      orders: [], // Added orders array
 
       dateRange: {
         start: "",
@@ -207,6 +267,7 @@ export default {
         this.loadMonthlySales(),
         this.loadDailySales(),
         this.loadTopProducts(),
+        this.loadOrders(), // Added loadOrders
       ]);
     },
 
@@ -252,6 +313,41 @@ export default {
       const res = await axios.get("/api/admin/reports/top-products", this.auth());
       this.topProducts = res.data;
       this.buildTopProductsChart();
+    },
+
+    // Added loadOrders method
+    async loadOrders() {
+      try {
+        const res = await axios.get("/api/admin/orders", {
+          ...this.auth(),
+          params: {
+            limit: 10, // Show last 10 orders
+            sort: 'created_at',
+            order: 'desc'
+          }
+        });
+        this.orders = res.data.orders || [];
+      } catch (error) {
+        console.error("Error loading orders:", error);
+        this.orders = [];
+      }
+    },
+
+    // Added utility methods
+    formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-PH', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    },
+
+    viewOrder(orderId) {
+      // Navigate to order details or show modal
+      this.$router.push(`/admin/orders/${orderId}`);
     },
 
     // CHARTS: Colors updated, scales should auto-adjust to white background
@@ -545,6 +641,132 @@ export default {
   line-height: 1;
 }
 
+/* Orders Section */
+.orders-section {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 10px rgba(10, 60, 43, 0.08);
+  border: 1px solid #e0f0e9;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.section-header h2 {
+  color: #0a3c2b;
+  font-weight: 600;
+  font-size: 20px;
+  margin: 0;
+}
+
+/* Orders Table */
+.orders-table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #e0f0e9;
+}
+
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+.orders-table th {
+  background: #f8fdfb;
+  color: #0a3c2b;
+  font-weight: 600;
+  font-size: 14px;
+  text-align: left;
+  padding: 16px;
+  border-bottom: 2px solid #e0f0e9;
+}
+
+.orders-table td {
+  padding: 16px;
+  border-bottom: 1px solid #f0f9f5;
+  color: #4a7c6d;
+  font-size: 14px;
+}
+
+.orders-table tr:hover {
+  background: #f8fdfb;
+}
+
+.orders-table tr:last-child td {
+  border-bottom: none;
+}
+
+.order-id {
+  font-weight: 600;
+  color: #0a3c2b;
+  font-family: 'Monaco', 'Consolas', monospace;
+}
+
+.customer-name {
+  font-weight: 500;
+}
+
+.order-amount {
+  font-weight: 600;
+  color: #0a3c2b;
+}
+
+/* Status Badges */
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status-delivered {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-processing {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Empty State */
+.no-orders {
+  text-align: center;
+  padding: 60px 20px !important;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #4a7c6d;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
 /* Charts Section */
 .charts-section {
   display: flex;
@@ -666,6 +888,21 @@ export default {
     flex-direction: column;
     align-items: stretch;
     gap: 16px;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .orders-table {
+    font-size: 13px;
+  }
+
+  .orders-table th,
+  .orders-table td {
+    padding: 12px 8px;
   }
 }
 

@@ -73,7 +73,7 @@
         </div>
 
         <!-- Add Review Form -->
-        <div v-if="canReview" class="add-review-card">
+        <div v-if="isLoggedIn" class="add-review-card">
           <h4>Share Your Experience</h4>
           <div class="rating-input">
             <label>Your Rating:</label>
@@ -113,20 +113,12 @@
           </button>
         </div>
 
-        <!-- Review Restrictions -->
-        <div v-else-if="isLoggedIn" class="review-restriction-card">
-          <div class="restriction-icon">🔒</div>
-          <div class="restriction-content">
-            <h4>Purchase to Review</h4>
-            <p>You need to purchase and receive this product first to share your experience.</p>
-          </div>
-        </div>
-
+        <!-- Login Prompt -->
         <div v-else class="review-restriction-card">
           <div class="restriction-icon">🔒</div>
           <div class="restriction-content">
             <h4>Join the Conversation</h4>
-            <p>Please log in to see reviews and share your feedback with our community.</p>
+            <p>Please log in to share your feedback with our community.</p>
             <button class="btn-login" @click="$emit('close')">Log In</button>
           </div>
         </div>
@@ -189,9 +181,7 @@ export default {
       rating: 0,
       hoverRating: 0,
       reviewComment: '',
-      canReview: false,
       isLoggedIn: false,
-      userOrders: [],
       submitting: false
     }
   },
@@ -218,7 +208,6 @@ export default {
   async mounted() {
     await this.checkUserStatus();
     await this.loadReviews();
-    await this.checkPurchaseStatus();
   },
   methods: {
     async checkUserStatus() {
@@ -230,35 +219,11 @@ export default {
       try {
         console.log('🔄 Loading reviews for product:', this.product.product_id);
         const response = await axios.get(`/api/reviews/product/${this.product.product_id}`);
-        console.log('📡 API Response:', response);
+        console.log('📡 Reviews loaded:', response.data);
         this.reviews = response.data;
       } catch (error) {
         console.error('❌ Error loading reviews:', error);
         this.reviews = [];
-      }
-    },
-
-    async checkPurchaseStatus() {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) return (this.canReview = false);
-
-        const response = await axios.get('/api/orders/user', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        this.userOrders = response.data;
-        console.log('🆔 Current Product ID:', this.product.product_id);
-        
-        const hasPurchased = this.userOrders.some(order => {
-          if (order.status !== 'delivered') return false;
-          return order.items?.some(item => item.product_id == this.product.product_id);
-        });
-
-        this.canReview = hasPurchased;
-      } catch (error) {
-        console.error('❌ Error checking purchase status:', error);
-        this.canReview = false;
       }
     },
 
@@ -268,35 +233,60 @@ export default {
 
     async submitReview() {
       try {
+        // Basic validation
+        if (!this.rating) {
+          alert('Please select a rating');
+          return;
+        }
+
+        if (!this.reviewComment.trim()) {
+          alert('Please write a review comment');
+          return;
+        }
+
         this.submitting = true;
         const token = localStorage.getItem('token');
-        if (!token) return alert('Please log in to submit a review');
+        if (!token) {
+          alert('Please log in to submit a review');
+          return;
+        }
 
         const reviewData = {
           product_id: this.product.product_id,
           rating: this.rating,
-          comment: this.reviewComment
+          comment: this.reviewComment.trim()
         };
 
-        await axios.post('/api/reviews', reviewData, {
+        console.log('📤 Submitting review:', reviewData);
+
+        const response = await axios.post('/api/reviews', reviewData, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
+        console.log('✅ Review submitted:', response.data);
+
+        // Reset form
         this.rating = 0;
         this.reviewComment = '';
+        this.hoverRating = 0;
+        
+        // Reload reviews to show the new one
         await this.loadReviews();
 
         // Show success message
         this.$emit('notification', 'Review submitted successfully!', 'success');
+
       } catch (error) {
-        console.error('Error submitting review:', error);
-        this.$emit('notification', 'Error submitting review', 'error');
+        console.error('❌ Error submitting review:', error);
+        const errorMessage = error.response?.data?.message || 'Error submitting review';
+        this.$emit('notification', errorMessage, 'error');
       } finally {
         this.submitting = false;
       }
     },
 
     formatDate(dateString) {
+      if (!dateString) return 'Recently';
       return new Date(dateString).toLocaleDateString('en-PH', {
         year: 'numeric',
         month: 'short',
@@ -305,7 +295,8 @@ export default {
     },
 
     getInitials(name) {
-      return name.split(' ').map(n => n[0]).join('').toUpperCase();
+      if (!name) return 'C';
+      return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
     }
   }
 }

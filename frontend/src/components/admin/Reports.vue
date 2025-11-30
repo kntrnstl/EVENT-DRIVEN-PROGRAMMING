@@ -1,5 +1,23 @@
 <template>
   <div class="reports-container">
+    <!-- Modern Notification -->
+    <div 
+      class="custom-notif"
+      :class="[{ show: notification.show }, notification.type]"
+    >
+      <div class="notif-content">
+        <div class="notif-icon">
+          <svg v-if="notification.type === 'success'" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        {{ notification.message }}
+      </div>
+    </div>
+
     <!-- Header Section -->
     <div class="header-section">
       <div class="header-content">
@@ -8,23 +26,65 @@
           <p class="page-subtitle">Track your business performance and analytics</p>
         </div>
         <div class="export-actions">
-          <button class="btn btn-secondary" @click="exportCSV">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 16L12 4M12 4L8 8M12 4L16 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M8 12H6C4.89543 12 4 12.8954 4 14V18C4 19.1046 4.89543 20 6 20H18C19.1046 20 20 19.1046 20 18V14C20 12.8954 19.1046 12 18 12H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            Export CSV
-          </button>
-          <button class="btn btn-primary" @click="exportPDF">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M16 13H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M16 17H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Export PDF
-          </button>
+          <!-- Export Dropdown -->
+          <div class="export-dropdown">
+            <button class="btn btn-primary dropdown-toggle" @click="toggleExportDropdown">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 16L12 4M12 4L8 8M12 4L16 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M8 12H6C4.89543 12 4 12.8954 4 14V18C4 19.1046 4.89543 20 6 20H18C19.1046 20 20 19.1046 20 18V14C20 12.8954 19.1046 12 18 12H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Export Reports
+            </button>
+            <div v-if="showExportDropdown" class="dropdown-menu">
+              <div class="dropdown-section">
+                <label>Date Range</label>
+                <div class="date-options">
+                  <button 
+                    v-for="option in dateOptions" 
+                    :key="option.value"
+                    :class="['date-option', { active: exportDateRange === option.value }]"
+                    @click="setExportDateRange(option.value)"
+                  >
+                    {{ option.label }}
+                  </button>
+                </div>
+                
+                <div v-if="exportDateRange === 'custom'" class="custom-date-range">
+                  <div class="filter-group">
+                    <label>From</label>
+                    <input type="date" v-model="exportCustomStart" class="date-input">
+                  </div>
+                  <div class="filter-group">
+                    <label>To</label>
+                    <input type="date" v-model="exportCustomEnd" class="date-input">
+                  </div>
+                </div>
+              </div>
+              
+              <div class="dropdown-section">
+                <label>Export Format</label>
+                <div class="export-buttons">
+                  <button class="btn btn-secondary btn-sm" @click="exportCSV">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M16 13H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M16 17H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Export CSV
+                  </button>
+                  <button class="btn btn-primary btn-sm" @click="exportPDF">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Export PDF
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -209,20 +269,31 @@
         </div>
       </div>
     </div>
+
+    <!-- Click outside handler for dropdown -->
+    <div v-if="showExportDropdown" class="click-outside-handler" @click="showExportDropdown = false"></div>
   </div>
 </template>
 
 <script>
 import axios from "axios";
 import { Chart, registerables } from "chart.js";
-Chart.register(...registerables);
 
-// Define the primary color palette based on #0a3c2b
-const PRIMARY_COLOR = "#0a3c2b"; // Dark Forest Green (Base)
-const ACCENT_COLOR_1 = "#1e7952"; // Mid Green (Buttons, Bar charts)
-const ACCENT_COLOR_2 = "#53b584"; // Light Green (Highlight text/values)
-const BACKGROUND_LIGHT = "#155a40"; // Card Background
-const CONTRAST_COLOR = "#FFFFFF"; // For high readability text
+// Import jsPDF separately to avoid autoTable issues
+let jsPDF;
+let autoTable;
+
+// Dynamically import jsPDF and autoTable to avoid initialization issues
+const loadPDFLibraries = async () => {
+  if (!jsPDF) {
+    jsPDF = (await import('jspdf')).default;
+  }
+  if (!autoTable) {
+    autoTable = (await import('jspdf-autotable')).default;
+  }
+};
+
+Chart.register(...registerables);
 
 export default {
   name: "Reports",
@@ -237,26 +308,349 @@ export default {
       monthlySales: [],
       dailySales: [],
       topProducts: [],
-      orders: [], // Added orders array
-
+      orders: [],
       dateRange: {
         start: "",
         end: "",
       },
-
       charts: {},
+
+      // New export data
+      showExportDropdown: false,
+      exportDateRange: 'today',
+      exportCustomStart: '',
+      exportCustomEnd: '',
+      dateOptions: [
+        { label: 'Today', value: 'today' },
+        { label: 'This Week', value: 'week' },
+        { label: 'This Month', value: 'month' },
+        { label: 'Custom Range', value: 'custom' }
+      ],
+      salesData: [], // Will store filtered sales data for export
+      
+      // Notification system
+      notification: {
+        show: false,
+        message: '',
+        type: 'success'
+      }
     };
   },
 
   mounted() {
     this.loadAllReports();
+    this.setDefaultExportDates();
   },
 
   methods: {
+    // Modern notification system
+    showNotification(message, type = 'success') {
+      this.notification.type = type;
+      this.notification.message = message;
+      this.notification.show = true;
+      
+      setTimeout(() => {
+        this.notification.show = false;
+      }, 4000);
+    },
+
     auth() {
       return {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       };
+    },
+
+    // Export dropdown methods
+    toggleExportDropdown() {
+      this.showExportDropdown = !this.showExportDropdown;
+    },
+
+    setExportDateRange(range) {
+      this.exportDateRange = range;
+      if (range !== 'custom') {
+        this.setDefaultExportDates();
+      }
+    },
+
+    setDefaultExportDates() {
+      const today = new Date();
+      this.exportCustomEnd = today.toISOString().split('T')[0];
+      
+      switch(this.exportDateRange) {
+        case 'today':
+          this.exportCustomStart = today.toISOString().split('T')[0];
+          break;
+        case 'week':
+          const weekAgo = new Date(today);
+          weekAgo.setDate(today.getDate() - 7);
+          this.exportCustomStart = weekAgo.toISOString().split('T')[0];
+          break;
+        case 'month':
+          const monthAgo = new Date(today);
+          monthAgo.setMonth(today.getMonth() - 1);
+          this.exportCustomStart = monthAgo.toISOString().split('T')[0];
+          break;
+      }
+    },
+
+    // Get date range for export
+    getExportDateRange() {
+      if (this.exportDateRange === 'custom') {
+        return {
+          start: this.exportCustomStart,
+          end: this.exportCustomEnd
+        };
+      }
+      return {
+        start: this.exportCustomStart,
+        end: this.exportCustomEnd
+      };
+    },
+
+    // Load sales data for export
+    async loadSalesForExport() {
+      try {
+        const dateRange = this.getExportDateRange();
+        const response = await axios.get('/api/admin/reports/sales-detailed', {
+          ...this.auth(),
+          params: {
+            start: dateRange.start,
+            end: dateRange.end
+          }
+        });
+        
+        // Handle the response structure
+        this.salesData = response.data.sales || [];
+        return this.salesData;
+        
+      } catch (error) {
+        console.error('Error loading sales data:', error);
+        this.showNotification('Failed to load sales data', 'error');
+        return [];
+      }
+    },
+
+    // Enhanced Export Methods
+   async exportCSV() {
+  try {
+    this.showExportDropdown = false;
+    const salesData = await this.loadSalesForExport();
+    
+    if (salesData.length === 0) {
+      this.showNotification('No sales data found for the selected date range', 'error');
+      return;
+    }
+
+    const headers = ['Order ID', 'Date', 'Customer', 'Product', 'Quantity', 'Unit Price', 'Total Amount', 'Status', 'Size'];
+    
+    // Calculate totals
+    const totalSales = salesData.reduce((sum, sale) => {
+      const amount = parseFloat(sale.total_amount || (sale.unit_price * sale.quantity) || 0);
+      return sum + amount;
+    }, 0);
+    
+    const totalItems = salesData.reduce((sum, sale) => sum + (parseInt(sale.quantity) || 0), 0);
+    const totalOrders = new Set(salesData.map(sale => sale.order_id)).size;
+
+    const csvContent = [
+      headers.join(','),
+      ...salesData.map(sale => {
+        const unitPrice = parseFloat(sale.unit_price || sale.price || 0);
+        const quantity = parseInt(sale.quantity) || 0;
+        const totalAmount = parseFloat(sale.total_amount || (unitPrice * quantity) || 0);
+        
+        return [
+          sale.order_id,
+          `"${this.formatDateForExport(sale.created_at)}"`,
+          `"${sale.customer_name || 'N/A'}"`,
+          `"${sale.product_name || 'N/A'}"`,
+          quantity,
+          unitPrice.toFixed(2),
+          totalAmount.toFixed(2),
+          sale.status || 'N/A',
+          sale.product_size || 'N/A'
+        ].join(',');
+      }),
+      '',
+      'SUMMARY',
+      `Total Orders,${totalOrders}`,
+      `Total Items Sold,${totalItems}`,
+      `Total Revenue,₱${this.formatNumber(totalSales)}`
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    const dateRange = this.getExportDateRange();
+    const fileName = `sales_report_${dateRange.start}_to_${dateRange.end}.csv`;
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', fileName);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    this.showNotification('CSV exported successfully!', 'success');
+  } catch (error) {
+    console.error('Error exporting CSV:', error);
+    this.showNotification('Error exporting CSV file', 'error');
+  }
+},
+
+async exportPDF() {
+  try {
+    this.showExportDropdown = false;
+    
+    // Load PDF libraries dynamically
+    await loadPDFLibraries();
+    
+    const salesData = await this.loadSalesForExport();
+    
+    if (salesData.length === 0) {
+      this.showNotification('No sales data found for the selected date range', 'error');
+      return;
+    }
+
+    const doc = new jsPDF();
+    const dateRange = this.getExportDateRange();
+    
+    // Use basic fonts to avoid encoding issues
+    doc.setFont('helvetica');
+    
+    // Title
+    doc.setFontSize(20);
+    doc.setTextColor(10, 60, 43);
+    doc.text('Sales Report', 14, 22);
+    
+    // Date range
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Date Range: ${dateRange.start} to ${dateRange.end}`, 14, 32);
+    
+    // Calculate totals
+    const totalSales = salesData.reduce((sum, sale) => {
+      const amount = parseFloat(sale.total_amount || (sale.unit_price * sale.quantity) || 0);
+      return sum + amount;
+    }, 0);
+    
+    const totalOrders = new Set(salesData.map(sale => sale.order_id)).size;
+    const totalItems = salesData.reduce((sum, sale) => sum + (parseInt(sale.quantity) || 0), 0);
+    
+    // Summary section - Use PHP instead of ₱ to avoid symbol issues
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Total Revenue: PHP ${this.formatNumber(totalSales)}`, 14, 45);
+    doc.text(`Total Orders: ${totalOrders}`, 14, 52);
+    doc.text(`Total Items Sold: ${totalItems}`, 14, 59);
+    
+    // Table
+    const tableColumn = ['Order ID', 'Date', 'Customer', 'Product', 'Qty', 'Amount', 'Status'];
+    const tableRows = [];
+    
+    salesData.forEach(sale => {
+      const totalAmount = parseFloat(sale.total_amount || (sale.unit_price * sale.quantity) || 0);
+      const saleData = [
+        sale.order_id.toString(),
+        this.formatDateForExport(sale.created_at),
+        sale.customer_name || 'N/A',
+        sale.product_name || 'N/A',
+        (sale.quantity || 0).toString(),
+        `PHP ${this.formatNumber(totalAmount)}`, // Use PHP instead of ₱
+        sale.status || 'N/A'
+      ];
+      tableRows.push(saleData);
+    });
+    
+    // Add autoTable with explicit font settings
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 65,
+      theme: 'grid',
+      styles: {
+        fontSize: 8,
+        cellPadding: 3,
+        font: 'helvetica',
+        fontStyle: 'normal',
+        textColor: [0, 0, 0],
+        lineColor: [200, 200, 200],
+        lineWidth: 0.1
+      },
+      headStyles: {
+        fillColor: [10, 60, 43],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        font: 'helvetica',
+        lineWidth: 0.1
+      },
+      bodyStyles: {
+        font: 'helvetica',
+        fontStyle: 'normal',
+        textColor: [0, 0, 0],
+        lineWidth: 0.1
+      },
+      alternateRowStyles: {
+        fillColor: [240, 249, 245],
+        textColor: [0, 0, 0]
+      },
+      margin: { top: 65 },
+      didDrawPage: (data) => {
+        // Add total summary at the bottom of the table
+        const finalY = data.cursor.y + 10;
+        if (data.pageNumber === data.pageCount) {
+          doc.setFontSize(10);
+          doc.setTextColor(10, 60, 43);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`GRAND TOTAL: PHP ${this.formatNumber(totalSales)}`, 14, finalY);
+          doc.setFont('helvetica', 'normal');
+        }
+      }
+    });
+    
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.setFont('helvetica', 'normal');
+      doc.text(
+        `Page ${i} of ${pageCount} - Generated on ${new Date().toLocaleDateString()}`,
+        doc.internal.pageSize.width / 2,
+        doc.internal.pageSize.height - 10,
+        { align: 'center' }
+      );
+    }
+    
+    const fileName = `sales_report_${dateRange.start}_to_${dateRange.end}.pdf`;
+    doc.save(fileName);
+    
+    this.showNotification('PDF exported successfully!', 'success');
+  } catch (error) {
+    console.error('Error exporting PDF:', error);
+    this.showNotification('Error exporting PDF file', 'error');
+  }
+},
+
+// Add this helper method for proper number formatting
+formatNumber(number) {
+  return new Intl.NumberFormat('en-PH', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(number);
+},
+
+    
+
+    formatDateForExport(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-PH', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
     },
 
     async loadAllReports() {
@@ -267,61 +661,89 @@ export default {
         this.loadMonthlySales(),
         this.loadDailySales(),
         this.loadTopProducts(),
-        this.loadOrders(), // Added loadOrders
+        this.loadOrders(),
       ]);
     },
 
-    // FETCH DATA methods remain the same...
     async loadTotalSales() {
-      const res = await axios.get("/api/admin/reports/total-sales", this.auth());
-      this.stats.totalSales = res.data.total_sales || 0;
+      try {
+        const res = await axios.get("/api/admin/reports/total-sales", this.auth());
+        this.stats.totalSales = res.data.total_sales || 0;
+      } catch (error) {
+        console.error('Error loading total sales:', error);
+        this.stats.totalSales = 0;
+      }
     },
 
     async loadTotalUsers() {
-      const res = await axios.get("/api/admin/reports/total-users", this.auth());
-      this.stats.totalUsers = res.data.total_users || 0;
+      try {
+        const res = await axios.get("/api/admin/reports/total-users", this.auth());
+        this.stats.totalUsers = res.data.total_users || 0;
+      } catch (error) {
+        console.error('Error loading total users:', error);
+        this.stats.totalUsers = 0;
+      }
     },
 
     async loadOrderSummary() {
-      const res = await axios.get("/api/admin/reports/orders-summary", this.auth());
-      this.orderSummary = {};
-      res.data.forEach(s => {
-        this.orderSummary[s.status] = s.count;
-      });
-      this.buildOrderStatusChart();
+      try {
+        const res = await axios.get("/api/admin/reports/orders-summary", this.auth());
+        this.orderSummary = {};
+        res.data.forEach(s => {
+          this.orderSummary[s.status] = s.count;
+        });
+        this.buildOrderStatusChart();
+      } catch (error) {
+        console.error('Error loading order summary:', error);
+        this.orderSummary = {};
+      }
     },
 
     async loadMonthlySales() {
-      const res = await axios.get("/api/admin/reports/monthly-sales", this.auth());
-      this.monthlySales = res.data;
-      this.buildMonthlySalesChart();
+      try {
+        const res = await axios.get("/api/admin/reports/monthly-sales", this.auth());
+        this.monthlySales = res.data;
+        this.buildMonthlySalesChart();
+      } catch (error) {
+        console.error('Error loading monthly sales:', error);
+        this.monthlySales = [];
+      }
     },
 
     async loadDailySales() {
-      const res = await axios.get("/api/admin/reports/sales-per-day", {
-        ...this.auth(),
-        params: {
-          start: this.dateRange.start || "2024-01-01",
-          end: this.dateRange.end || "2099-12-31",
-        }
-      });
-      this.dailySales = res.data;
-      this.buildDailySalesChart();
+      try {
+        const res = await axios.get("/api/admin/reports/sales-per-day", {
+          ...this.auth(),
+          params: {
+            start: this.dateRange.start || "2024-01-01",
+            end: this.dateRange.end || "2099-12-31",
+          }
+        });
+        this.dailySales = res.data;
+        this.buildDailySalesChart();
+      } catch (error) {
+        console.error('Error loading daily sales:', error);
+        this.dailySales = [];
+      }
     },
 
     async loadTopProducts() {
-      const res = await axios.get("/api/admin/reports/top-products", this.auth());
-      this.topProducts = res.data;
-      this.buildTopProductsChart();
+      try {
+        const res = await axios.get("/api/admin/reports/top-products", this.auth());
+        this.topProducts = res.data;
+        this.buildTopProductsChart();
+      } catch (error) {
+        console.error('Error loading top products:', error);
+        this.topProducts = [];
+      }
     },
 
-    // Added loadOrders method
     async loadOrders() {
       try {
         const res = await axios.get("/api/admin/orders", {
           ...this.auth(),
           params: {
-            limit: 10, // Show last 10 orders
+            limit: 10,
             sort: 'created_at',
             order: 'desc'
           }
@@ -333,7 +755,6 @@ export default {
       }
     },
 
-    // Added utility methods
     formatDate(dateString) {
       const date = new Date(dateString);
       return date.toLocaleDateString('en-PH', {
@@ -346,11 +767,10 @@ export default {
     },
 
     viewOrder(orderId) {
-      // Navigate to order details or show modal
       this.$router.push(`/admin/orders/${orderId}`);
     },
 
-    // CHARTS: Colors updated, scales should auto-adjust to white background
+    // Chart methods remain the same...
     buildMonthlySalesChart() {
       const ctx = document.getElementById("monthlySalesChart");
       if (this.charts.monthly) this.charts.monthly.destroy();
@@ -363,15 +783,14 @@ export default {
             {
               label: "Sales (₱)",
               data: this.monthlySales.map(x => x.monthly_sales),
-              borderColor: ACCENT_COLOR_1, // Mid Green
-              backgroundColor: `${ACCENT_COLOR_1}40`, // Mid Green with 25% opacity
+              borderColor: "#1e7952",
+              backgroundColor: "#1e795240",
               borderWidth: 3,
               tension: 0.4,
             }
           ]
         },
         options: {
-            // Set scale colors to black/dark for readability against white chart area
             scales: {
                 x: { ticks: { color: "#333" }, grid: { color: "#eee" } },
                 y: { ticks: { color: "#333" }, grid: { color: "#eee" } },
@@ -392,7 +811,7 @@ export default {
           datasets: [{
             label: "Daily Sales (₱)",
             data: this.dailySales.map(x => x.daily_sales),
-            backgroundColor: ACCENT_COLOR_1 // Mid Green
+            backgroundColor: "#1e7952"
           }]
         },
         options: {
@@ -416,11 +835,11 @@ export default {
           datasets: [{
             label: "Units Sold",
             data: this.topProducts.map(x => x.total_sold),
-            backgroundColor: PRIMARY_COLOR // Dark Forest Green
+            backgroundColor: "#0a3c2b"
           }]
         },
         options: {
-            indexAxis: 'y', // Horizontal bars for product names
+            indexAxis: 'y',
             scales: {
                 x: { ticks: { color: "#333" }, grid: { color: "#eee" } },
                 y: { ticks: { color: "#333" }, grid: { color: "#eee" } },
@@ -440,9 +859,8 @@ export default {
           labels: Object.keys(this.orderSummary),
           datasets: [{
             data: Object.values(this.orderSummary),
-            // Distinctive colors for status: Green, Dark Green, Gray, Red
-            backgroundColor: [ACCENT_COLOR_1, PRIMARY_COLOR, "#7f8c8d", "#c0392b"],
-            hoverBackgroundColor: [ACCENT_COLOR_2, PRIMARY_COLOR, "#95a5a6", "#e74c3c"]
+            backgroundColor: ["#1e7952", "#0a3c2b", "#7f8c8d", "#c0392b"],
+            hoverBackgroundColor: ["#53b584", "#0a3c2b", "#95a5a6", "#e74c3c"]
           }]
         },
         options: {
@@ -450,30 +868,59 @@ export default {
         }
       });
     },
-
-    exportCSV() {
-      // Export logic remains the same
-      const csv =
-        ["Metric,Value",
-        `Total Sales,${this.stats.totalSales}`,
-        `Total Users,${this.stats.totalUsers}`].join("\n");
-
-      const blob = new Blob([csv], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "report.csv";
-      a.click();
-    },
-
-    exportPDF() {
-      window.print();
-    }
   }
 };
 </script>
 
+
 <style scoped>
+/* Add notification styles */
+.custom-notif {
+  position: fixed;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 16px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  color: white;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  z-index: 10000;
+  min-width: 300px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.custom-notif.show {
+  top: 24px;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.custom-notif.success {
+  background: linear-gradient(135deg, #1a7d5e, #0a3c2b);
+  border-left: 4px solid #10b981;
+}
+
+.custom-notif.error {
+  background: linear-gradient(135deg, #e53e3e, #c53030);
+  border-left: 4px solid #f56565;
+}
+
+.notif-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.notif-icon {
+  display: flex;
+  align-items: center;
+}
+
+/* Rest of your existing styles remain the same */
 .reports-container {
   padding: 24px;
   background: #f8fdfb;
@@ -481,7 +928,6 @@ export default {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* Header Section */
 .header-section {
   margin-bottom: 32px;
 }
@@ -513,7 +959,103 @@ export default {
   gap: 12px;
 }
 
-/* Buttons */
+.export-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: white;
+  border: 1px solid #e0f0e9;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 10px 25px rgba(10, 60, 43, 0.15);
+  min-width: 300px;
+  z-index: 1000;
+}
+
+.dropdown-section {
+  margin-bottom: 16px;
+}
+
+.dropdown-section:last-child {
+  margin-bottom: 0;
+}
+
+.dropdown-section label {
+  display: block;
+  color: #0a3c2b;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.date-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.date-option {
+  padding: 8px 12px;
+  border: 1px solid #e0f0e9;
+  background: #f8fdfb;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #4a7c6d;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.date-option:hover {
+  border-color: #1a7d5e;
+  color: #0a3c2b;
+}
+
+.date-option.active {
+  background: #1a7d5e;
+  color: white;
+  border-color: #1a7d5e;
+}
+
+.custom-date-range {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.export-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.export-buttons .btn {
+  flex: 1;
+  justify-content: center;
+}
+
+.click-outside-handler {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -571,7 +1113,6 @@ export default {
   color: #0a3c2b;
 }
 
-/* Summary Cards */
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -597,20 +1138,21 @@ export default {
 }
 
 .summary-card.status-total-users {
-  border-left: 4px solid #1e40af; /* Deep blue */
+  border-left: 4px solid #1e40af;
 }
 
 .summary-card.status-total-sales {
-  border-left: 4px solid  #f59e0b; /* Bronze */
+  border-left: 4px solid  #f59e0b;
 }
 
 .summary-card.status-delivered {
-  border-left: 4px solid #047857; /* Emerald green */
+  border-left: 4px solid #047857;
 }
 
 .summary-card.status-pending {
-  border-left: 4px solid #dc2626; /* Red for urgency */
+  border-left: 4px solid #dc2626;
 }
+
 .card-icon {
   width: 48px;
   height: 48px;
@@ -641,7 +1183,6 @@ export default {
   line-height: 1;
 }
 
-/* Orders Section */
 .orders-section {
   background: white;
   border-radius: 16px;
@@ -665,7 +1206,6 @@ export default {
   margin: 0;
 }
 
-/* Orders Table */
 .orders-table-container {
   overflow-x: auto;
   border-radius: 12px;
@@ -718,7 +1258,6 @@ export default {
   color: #0a3c2b;
 }
 
-/* Status Badges */
 .status-badge {
   padding: 6px 12px;
   border-radius: 20px;
@@ -747,7 +1286,6 @@ export default {
   color: #991b1b;
 }
 
-/* Empty State */
 .no-orders {
   text-align: center;
   padding: 60px 20px !important;
@@ -767,7 +1305,6 @@ export default {
   font-weight: 500;
 }
 
-/* Charts Section */
 .charts-section {
   display: flex;
   flex-direction: column;
@@ -904,6 +1441,15 @@ export default {
   .orders-table td {
     padding: 12px 8px;
   }
+
+  .dropdown-menu {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 400px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -920,6 +1466,18 @@ export default {
   
   .card-value {
     font-size: 20px;
+  }
+
+  .date-options {
+    grid-template-columns: 1fr;
+  }
+
+  .custom-date-range {
+    grid-template-columns: 1fr;
+  }
+
+  .export-buttons {
+    flex-direction: column;
   }
 }
 </style>

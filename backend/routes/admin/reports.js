@@ -147,4 +147,44 @@ router.get("/monthly-sales", async (req, res) => {
   }
 });
 
+
+// ========================================
+// 7. DETAILED SALES DATA FOR EXPORT (NEW)
+// ========================================
+router.get("/sales-detailed", async (req, res) => {
+  try {
+    const { start, end } = req.query;
+
+    const [rows] = await pool.execute(
+      `
+      SELECT 
+        o.id as order_id,
+        o.created_at,
+        u.username as customer_name,
+        p.name as product_name,
+        oi.quantity,
+        oi.price as unit_price,
+        (oi.price * oi.quantity) as total_amount,
+        o.status,
+        ps.size as product_size
+      FROM orders o
+      LEFT JOIN users u ON o.user_id = u.id
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      LEFT JOIN products p ON oi.product_id = p.id
+      LEFT JOIN product_sizes ps ON oi.size_id = ps.id
+      WHERE o.status = 'delivered'
+      AND DATE(o.created_at) BETWEEN ? AND ?
+      ORDER BY o.created_at DESC
+      `,
+      [start || '2024-01-01', end || '2099-12-31']
+    );
+
+    res.json({ sales: rows });
+
+  } catch (err) {
+    console.error("DETAILED SALES ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;

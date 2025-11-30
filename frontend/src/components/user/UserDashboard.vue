@@ -55,6 +55,11 @@
           </div>
           
           <div v-if="userDropdownOpen" class="dropdown-menu">
+            <!-- Add Profile Item Here -->
+            <div class="dropdown-item" @click="setView('profile')">
+              <i class="fas fa-user-circle"></i>
+              <span>My Profile</span>
+            </div>
             <div class="dropdown-item" @click="setView('my-orders')">
               <i class="fas fa-box-open"></i>
               <span>My Orders</span>
@@ -82,6 +87,12 @@
         />
         <ContactView v-if="currentView==='contact'" />
         <MyOrders v-if="currentView==='my-orders'" />
+        <!-- Add ProfileView Here -->
+        <ProfileView 
+          v-if="currentView==='profile'" 
+          :user="currentUser"
+          @profile-updated="handleProfileUpdate"
+        />
       </div>
     </transition>
 
@@ -208,6 +219,7 @@ import ProductsView from './ProductsView.vue';
 import CartView from './CartView.vue';
 import ContactView from './ContactView.vue';
 import MyOrders from './MyOrders.vue';
+import ProfileView from './ProfileView.vue'; // Add ProfileView import
 
 // Router
 const router = useRouter();
@@ -236,7 +248,16 @@ const getUserId = () => {
   return localStorage.getItem('userId');
 };
 
-// Fetch current user data
+// Add handleProfileUpdate method
+const handleProfileUpdate = (updatedUserData) => {
+  // Update current user data when profile is updated
+  currentUser.value = {
+    ...currentUser.value,
+    ...updatedUserData
+  };
+  showNotification('success', 'Profile updated successfully!');
+};
+
 // Fetch current user data
 const fetchCurrentUser = async () => {
   try {
@@ -246,7 +267,7 @@ const fetchCurrentUser = async () => {
       return;
     }
 
-    const response = await fetch('/api/current-user', {
+    const response = await fetch('/api/users/profile/me', {  // Changed endpoint
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -255,15 +276,13 @@ const fetchCurrentUser = async () => {
 
     if (response.ok) {
       const data = await response.json();
-      if (data && data.user) {
-        currentUser.value = {
-          username: data.user.username || 'Customer',
-          email: data.user.email || 'customer@example.com',
-          role: data.user.role || 'customer'
-        };
-        // Store userId for future use
-        localStorage.setItem('userId', data.user.id);
-      }
+      currentUser.value = {
+        username: data.username || 'Customer',
+        email: data.email || 'customer@example.com',
+        role: data.role || 'customer'
+      };
+      // Store userId for future use
+      localStorage.setItem('userId', data.id);
     } else {
       console.error('Failed to fetch user data');
       // Fallback values for user

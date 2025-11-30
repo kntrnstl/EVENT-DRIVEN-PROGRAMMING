@@ -133,21 +133,20 @@
                 <span class="price">₱{{ parseFloat(product.price).toFixed(2) }}</span>
               </td>
               <td class="col-stock">
-                <div class="sizes-container">
+                <div class="sizes-display">
                   <div 
                     v-for="size in product.sizes" 
                     :key="size.id" 
-                    :class="['size-item', {
-                      'low-stock': size.stock < 5 && size.stock > 0,
-                      'out-stock': size.stock === 0
-                    }]"
+                    class="size-with-status"
                   >
-                    <span class="size-label">{{ size.size }}</span>
-                    <span class="stock-count">{{ size.stock }}</span>
+                    <span class="size-tag">{{ size.size }}</span>
+                    <span :class="['size-stock-badge', getSizeStockStatus(size)]">
+                      {{ size.stock }}
+                    </span>
                   </div>
-                  <div v-if="!product.sizes || product.sizes.length === 0" class="no-sizes">
+                  <span v-if="!product.sizes || product.sizes.length === 0" class="no-sizes">
                     No sizes
-                  </div>
+                  </span>
                 </div>
               </td>
               <td class="col-actions">
@@ -252,7 +251,6 @@ export default {
   },
   computed: {
     categories() {
-      // Extract unique categories from products
       const categorySet = new Set();
       this.products.forEach(product => {
         if (product.category_name) {
@@ -321,6 +319,12 @@ export default {
     this.fetchProducts();
   },
   methods: {
+    getSizeStockStatus(size) {
+      const stock = parseInt(size.stock) || 0;
+      if (stock === 0) return 'out-of-stock';
+      if (stock < 10) return 'low-stock';
+      return 'in-stock';
+    },
     showNotification(type, message) {
       this.notification.type = type;
       this.notification.message = message;
@@ -329,7 +333,6 @@ export default {
         this.notification.show = false;
       }, 3000);
     },
-
     async fetchProducts() {
       try {
         const res = await axios.get('/api/admin/products', {
@@ -347,13 +350,11 @@ export default {
         this.showNotification('error', 'Failed to fetch products');
       }
     },
-
     prepareDelete(id, name) {
       this.confirmDelete.id = id;
       this.confirmDelete.name = name;
       this.confirmDelete.show = true;
     },
-
     async confirmDeleteProduct() {
       try {
         await axios.delete(`/api/admin/products/${this.confirmDelete.id}`, {
@@ -368,11 +369,9 @@ export default {
         this.confirmDelete.show = false;
       }
     },
-
     cancelDelete() {
       this.confirmDelete.show = false;
     },
-    
     changePage(page) {
       if (page >= 1 && page <= this.totalPages) {
         this.currentPage = page;
@@ -592,6 +591,14 @@ export default {
 
 .col-actions {
   width: 80px;
+  text-align: center;
+}
+
+.col-actions .btn-icon {
+  margin-left: 8px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Product Info */
@@ -632,71 +639,92 @@ export default {
 }
 
 /* Sizes & Stock */
-.sizes-container {
+.sizes-display {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.size-with-status {
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
-.size-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
+.size-tag {
   background: #f0f9f5;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 500;
+  color: #0a3c2b;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid #c8e6d9;
+  min-width: 30px;
+  text-align: center;
 }
 
-.size-item.low-stock {
-  background: #fef3c7;
+.size-stock-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  min-width: 40px;
+}
+
+.size-stock-badge.in-stock {
+  background-color: #e0f2ec;
+  color: #0a3c2b;
+}
+
+.size-stock-badge.low-stock {
+  background-color: #fef3c7;
   color: #92400e;
 }
 
-.size-item.out-stock {
-  background: #fef2f2;
-  color: #991b1b;
-}
-
-.size-label {
-  font-weight: 600;
-}
-
-.stock-count {
-  font-weight: 700;
+.size-stock-badge.out-of-stock {
+  background-color: #f8d7da;
+  color: #721c24;
 }
 
 .no-sizes {
   color: #7aa895;
   font-style: italic;
-  font-size: 13px;
+  font-size: 12px;
 }
 
-/* Action Buttons */
 .action-buttons {
   display: flex;
   gap: 8px;
   justify-content: center;
+  align-items: center;
 }
 
-.btn-action {
+.btn-icon {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 36px;
   height: 36px;
+  border-radius: 8px;
   border: 1px solid #e0f0e9;
   background: white;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
   color: #4a7c6d;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin: 0 auto;
 }
 
-.btn-action:hover {
-  background: #f0f9f5;
-  border-color: #1a7d5e;
+.btn-icon.btn-danger {
+  background-color: #fed7d7;
+  color: #c53030;
+  border-color: #fed7d7;
+}
+
+.btn-icon.btn-danger:hover {
+  background-color: #e53e3e;
+  color: white;
+  border-color: #e53e3e;
 }
 
 /* Buttons */
@@ -713,41 +741,23 @@ export default {
   transition: all 0.2s;
 }
 
+.btn-secondary {
+  background-color: #f0f9f5;
+  color: #1a7d5e;
+  border: 1px solid #c8e6d9;
+}
+
+.btn-secondary:hover {
+  background-color: #e0f0e9;
+}
+
 .btn-danger {
-  margin-right: 25px;
   background-color: #e53e3e;
   color: white;
 }
 
 .btn-danger:hover {
   background-color: #c53030;
-}
-
-/* Action Buttons */
-.btn-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  border: 1px solid #e0f0e9;
-  background: white;
-  color: #4a7c6d;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-icon.btn-danger {
-  background-color: #fed7d7;
-  color: #c53030;
-  border-color: #fed7d7;
-}
-
-.btn-icon.btn-danger:hover {
-  background-color: #e53e3e;
-  color: white;
-  border-color: #e53e3e;
 }
 
 /* Empty State */
@@ -1020,10 +1030,6 @@ export default {
   .summary-card {
     min-width: auto;
     flex: 1;
-  }
-  
-  .sizes-container {
-    justify-content: center;
   }
   
   .modal {

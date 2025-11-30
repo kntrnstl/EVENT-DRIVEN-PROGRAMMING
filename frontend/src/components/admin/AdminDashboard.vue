@@ -17,8 +17,8 @@
           <i class="fas fa-bars"></i>
         </button>
         <div class="brand">
-          <i class="fas fa-shield-alt brand-icon"></i>
-          <h1>Admin Panel</h1>
+          <i class="fas fa-shoe-prints brand-icon"></i>
+          <h1>Admin Dashboard</h1>
         </div>
       </div>
       <div class="header-right">
@@ -34,10 +34,6 @@
             <i class="fas fa-chevron-down dropdown-arrow" :class="{ rotated: userDropdownOpen }"></i>
           </div>
           <div v-if="userDropdownOpen" class="dropdown-menu">
-            <div class="dropdown-item" @click="openSettings">
-              <i class="fas fa-cog"></i>
-              <span>Settings</span>
-            </div>
             <div class="dropdown-item" @click="confirmLogout">
               <i class="fas fa-sign-out-alt"></i>
               <span>Logout</span>
@@ -124,56 +120,6 @@
       </div>
     </div>
 
-    <!-- Settings Modal -->
-    <div v-if="showSettings" class="modal-overlay">
-      <div class="modal">
-        <div class="modal-header">
-          <i class="fas fa-cog modal-icon"></i>
-          <h3>Settings</h3>
-          <button class="modal-close" @click="showSettings = false">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="settings-content">
-            <div class="setting-item">
-              <label>Theme</label>
-              <select v-model="settings.theme" class="setting-input">
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
-                <option value="auto">Auto</option>
-              </select>
-            </div>
-            <div class="setting-item">
-              <label>Notifications</label>
-              <div class="toggle-switch">
-                <input type="checkbox" v-model="settings.notifications" id="notifications">
-                <label for="notifications" class="toggle-slider"></label>
-              </div>
-            </div>
-            <div class="setting-item">
-              <label>Language</label>
-              <select v-model="settings.language" class="setting-input">
-                <option value="en">English</option>
-                <option value="es">Spanish</option>
-                <option value="fr">French</option>
-              </select>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" @click="showSettings = false">
-            <i class="fas fa-times"></i>
-            Cancel
-          </button>
-          <button class="btn btn-primary" @click="saveSettings">
-            <i class="fas fa-save"></i>
-            Save Changes
-          </button>
-        </div>
-      </div>
-    </div>
-
   </div>
 </template>
 
@@ -217,11 +163,6 @@ export default {
         username: 'Loading...',
         email: 'loading...@example.com',
         role: 'Admin'
-      },
-      settings: {
-        theme: 'light',
-        notifications: true,
-        language: 'en'
       },
       menuItems: [
         { id: 'inventory', label: 'View Inventory', icon: 'fas fa-boxes' },
@@ -312,14 +253,6 @@ const response = await axios.get('/api/admin/current-user', {
       this.userDropdownOpen = false;
       this.showLogoutConfirm = true;
     },
-    openSettings() {
-      this.userDropdownOpen = false;
-      this.showSettings = true;
-    },
-    saveSettings() {
-      this.showSettings = false;
-      this.showNotification('success', 'Settings saved successfully!');
-    },
     showNotification(type, message){
       const icons = {
         success: 'fas fa-check-circle',
@@ -385,10 +318,10 @@ const response = await axios.get('/api/admin/current-user', {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 32px;
+  padding: 8px 32px 8px;
   background: #0a3c2b;
   border-bottom: 1px solid #1a7d5e;
-  height: 70px;
+  height: 78px;
   box-shadow: 0 2px 10px rgba(10, 60, 43, 0.1);
   position: fixed;
   top: 0;
@@ -837,76 +770,6 @@ const response = await axios.get('/api/admin/current-user', {
   color: #4a7c6d;
   line-height: 1.6;
   font-size: 15px;
-}
-
-/* Settings Styles */
-.settings-content {
-  padding: 8px 0;
-}
-
-.setting-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 0;
-  border-bottom: 1px solid #f0f9f5;
-}
-
-.setting-item:last-child {
-  border-bottom: none;
-}
-
-.setting-item label {
-  font-weight: 500;
-  color: #0a3c2b;
-  font-size: 14px;
-}
-
-.setting-input {
-  padding: 8px 12px;
-  border: 1px solid #c8e6d9;
-  border-radius: 8px;
-  background: #f8fdfb;
-  color: #0a3c2b;
-  font-size: 14px;
-  min-width: 120px;
-}
-
-.toggle-switch {
-  position: relative;
-  display: inline-block;
-  width: 44px;
-  height: 24px;
-}
-
-.toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.toggle-slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #c8e6d9;
-  transition: .4s;
-  border-radius: 24px;
-}
-
-.toggle-slider:before {
-  position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: .4s;
-  border-radius: 50%;
 }
 
 input:checked + .toggle-slider {

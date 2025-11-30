@@ -26,7 +26,9 @@
                 required
                 class="modern-input"
               />
-              <div class="input-icon">👤</div>
+              <div class="input-icon">
+                <i class="fas fa-user"></i>
+              </div>
             </div>
 
             <div class="input-group">
@@ -37,23 +39,27 @@
                 required
                 class="modern-input"
               />
-              <div class="input-icon">✉️</div>
+              <div class="input-icon">
+                <i class="fas fa-envelope"></i>
+              </div>
             </div>
-
             <div class="input-group">
               <input
                 v-model="password"
+                :type="showPassword ? 'text' : 'password'"
                 placeholder="Password"
-                type="password"
                 required
                 class="modern-input"
               />
-              <div class="input-icon">🔒</div>
+              <div class="password-toggle" @click="showPassword = !showPassword">
+                <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+              </div>
             </div>
-
             <button type="submit" class="auth-button">
               <span>{{ isLogin ? 'Sign In' : 'Create Account' }}</span>
-              <div class="button-icon">→</div>
+              <div class="button-icon">
+                <i class="fas fa-arrow-right"></i>
+              </div>
             </button>
           </form>
 
@@ -67,7 +73,9 @@
           </div>
 
           <div v-if="message" :class="['message', messageType]">
-            <div class="message-icon">{{ messageType === 'success' ? '✓' : '⚠' }}</div>
+            <div class="message-icon">
+              <i :class="messageType === 'success' ? 'fas fa-check' : 'fas fa-exclamation-triangle'"></i>
+            </div>
             {{ message }}
           </div>
         </div>
@@ -95,17 +103,17 @@ export default {
       username: '',
       email: '',
       password: '',
+      showPassword: false,
       message: '',
       messageType: 'success',
       // Keep images as an array for simple access to the first element
       images: [img1], // Only need one image in the array
       currentImage: 0,
-        isVerifying: false,
+      isVerifying: false,
       verificationCode: "",
       emailForVerify: "",
     };
   },
-  // Removed mounted() hook entirely as startSlideshow is no longer needed
   methods: {
     toggleForm() {
       this.isLogin = !this.isLogin;
@@ -113,31 +121,31 @@ export default {
       this.email = '';
       this.password = '';
       this.message = '';
+      this.showPassword = false;
     },
-    // Removed startSlideshow() method
     async register() {
-  try {
-    const res = await axios.post('/api/auth/register', {
-      username: this.username,
-      email: this.email,
-      password: this.password
-    });
+      try {
+        const res = await axios.post('/api/auth/register', {
+          username: this.username,
+          email: this.email,
+          password: this.password
+        });
 
-    this.message = "Verification code sent to your email!";
-    this.messageType = "success";
+        this.message = "Verification code sent to your email!";
+        this.messageType = "success";
 
-    // Redirect to verify page and save email
-    localStorage.setItem("pendingEmail", this.email);
+        // Redirect to verify page and save email
+        localStorage.setItem("pendingEmail", this.email);
 
-    setTimeout(() => {
-      this.router.push("/verify");
-    }, 800);
+        setTimeout(() => {
+          this.router.push("/verify");
+        }, 800);
 
-  } catch (err) {
-    this.message = err.response?.data?.message || 'Error registering';
-    this.messageType = 'error';
-  }
-},
+      } catch (err) {
+        this.message = err.response?.data?.message || 'Error registering';
+        this.messageType = 'error';
+      }
+    },
 
     async login() {
       try {
@@ -167,7 +175,6 @@ export default {
 </script>
 
 <style scoped>
-
 .auth-wrapper {
   background: #0d2b1f;
   min-height: 100vh;
@@ -176,9 +183,9 @@ export default {
   align-items: center;  
   padding: 20px;
   font-family: 'Inter', sans-serif;
-    overflow: auto;          /* still scrollable */
-  scrollbar-width: none;    /* Firefox */
-  -ms-overflow-style: none; /* IE 10+ */
+  overflow: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .auth-wrapper::-webkit-scrollbar {
@@ -189,13 +196,13 @@ export default {
   display: flex;
   align-items: stretch;
   gap: 0;
-  max-width: 860px; /* Increased to accommodate wider auth-card */
+  max-width: 860px;
   width: 100%;
 }
 
 /* ----------------- Slideshow Card ----------------- */
 .slideshow-card {
-  width: 500px; /* 380px + 10% = 418px */
+  width: 500px;
   height: 550px;
   border-radius: 20px;
   overflow: hidden;
@@ -205,31 +212,14 @@ export default {
   right: 100px;
 }
 
-.slideshow-container {
-  width: 100%;
-  height: 100%;
-  position: relative;
-}
-
 .slideshow-img {
   width: 100%;
   height: 100%;
   object-fit: fill;
-  position: absolute; /* Keep absolute for stacking context */
+  position: absolute;
   top: 0;
   left: 0;
 }
-
-/* Removed 'fade' transition styles as they are no longer needed */
-/* .fade-enter-active, .fade-leave-active {
-  transition: opacity 1s ease;
-}
-.fade-enter-from, .fade-leave-to {
-  opacity: 0;
-}
-.fade-enter-to, .fade-leave-from {
-  opacity: 1;
-} */
 
 /* ----------------- Login/Register Card ----------------- */
 .auth-card {
@@ -249,7 +239,7 @@ export default {
 }
 
 .card-content {
-  padding: 48px 20px; /* Increased horizontal padding for wider card */
+  padding: 48px 20px;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -257,10 +247,9 @@ export default {
   transition: padding 0.3s ease;
 }
 
-/* Adjust content upward for registration form */
 .card-content.register-mode {
-  padding-top: 36px; /* Reduced top padding for registration */
-  padding-bottom: 36px; /* Reduced bottom padding for registration */
+  padding-top: 36px;
+  padding-bottom: 36px;
 }
 
 /* ----------------- Header ----------------- */
@@ -271,7 +260,7 @@ export default {
 }
 
 .card-content.register-mode .card-header {
-  margin-bottom: 28px; /* Reduced margin for registration */
+  margin-bottom: 28px;
 }
 
 h1 {
@@ -294,7 +283,7 @@ h1 {
 }
 
 .card-content.register-mode .auth-form {
-  margin-bottom: 16px; /* Reduced margin for registration */
+  margin-bottom: 16px;
 }
 
 /* ----------------- Inputs ----------------- */
@@ -304,21 +293,20 @@ h1 {
 }
 
 .card-content.register-mode .input-group {
-  margin-bottom: 16px; /* Reduced margin for registration */
+  margin-bottom: 16px;
 }
 
 .modern-input {
   width: 100%;
   padding: 16px 50px 16px 18px;
   border-radius: 12px;
-  background: rgba(8, 24, 18, 0.9); /* darker green tone */
+  background: rgba(8, 24, 18, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #fff;
   font-size: 15px;
   box-sizing: border-box;
   transition: all 0.3s ease;
 }
-
 
 .modern-input::placeholder {
   color: rgba(255,255,255,0.5);
@@ -341,6 +329,28 @@ h1 {
   pointer-events: none;
 }
 
+/* Update password toggle to be in lock icon position */
+.password-toggle {
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #fff;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+  font-size: 16px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.password-toggle:hover {
+  opacity: 1;
+}
+
 /* ----------------- Button ----------------- */
 .auth-button {
   width: 100%;
@@ -357,11 +367,11 @@ h1 {
   align-items: center;
   transition: all 0.3s ease;
   margin-top: auto;
-  gap: 10px; /* optional spacing between text and icon */
+  gap: 10px;
 }
 
 .card-content.register-mode .auth-button {
-  margin-top: 20px; /* Adjusted for registration */
+  margin-top: 20px;
 }
 
 .auth-button:hover {
@@ -371,7 +381,7 @@ h1 {
 }
 
 .button-icon {
-  font-size: 18px;
+  font-size: 16px;
   transition: transform 0.3s ease;
 }
 
@@ -387,7 +397,7 @@ h1 {
 }
 
 .card-content.register-mode .auth-footer {
-  margin-top: 10px; /* Reduced margin for registration */
+  margin-top: 10px;
 }
 
 .toggle-text {
@@ -422,7 +432,7 @@ h1 {
 }
 
 .card-content.register-mode .message {
-  margin-top: 14px; /* Reduced margin for registration */
+  margin-top: 14px;
 }
 
 .message.success {
@@ -438,8 +448,7 @@ h1 {
 }
 
 .message-icon {
-  font-size: 16px;
-  font-weight: bold;
+  font-size: 14px;
 }
 
 /* ----------------- Animations ----------------- */

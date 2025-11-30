@@ -24,12 +24,11 @@
 
       <div class="filter-group">
         <select v-model.number="filterCategory" class="filter-select">
-  <option value="">All Categories</option>
-  <option v-for="category in categories" :key="category.id" :value="category.id">
-    {{ category.name }}
-  </option>
-</select>
-
+          <option value="">All Categories</option>
+          <option v-for="category in categories" :key="category.id" :value="category.id">
+            {{ category.name }}
+          </option>
+        </select>
         
         <select v-model="filterStock" class="filter-select">
           <option value="">All Stock Status</option>
@@ -45,7 +44,7 @@
       <table class="product-table">
         <thead>
           <tr>
-            <th class="product-info">Product</th>
+            <th class="product-col">Product</th>
             <th>Category</th>
             <th>Price</th>
             <th>Sizes & Stock</th>
@@ -55,13 +54,15 @@
         </thead>
         <tbody>
           <tr v-for="product in paginatedProducts" :key="product.product_id">
-            <td class="product-info">
-              <div class="avatar">
-                {{ getProductInitials(product.name) }}
-              </div>
-              <div class="product-details">
-                <div class="product-name">{{ product.name }}</div>
-                <div class="product-description">{{ product.description || 'No description' }}</div>
+            <td class="product-col">
+              <div class="product-content">
+                <div class="avatar">
+                  {{ getProductInitials(product.name) }}
+                </div>
+                <div class="product-text">
+                  <div class="product-name">{{ product.name }}</div>
+                  <div class="product-description">{{ truncateDescription(product.description) || 'No description' }}</div>
+                </div>
               </div>
             </td>
             <td>
@@ -402,13 +403,12 @@ export default {
         );
       }
       
-// Category filter
-if (this.filterCategory) {
-  filtered = filtered.filter(product => 
-    product.category_id == Number(this.filterCategory)
-  );
-}
-
+      // Category filter
+      if (this.filterCategory) {
+        filtered = filtered.filter(product => 
+          product.category_id == Number(this.filterCategory)
+        );
+      }
       
       // Stock filter
       if (this.filterStock) {
@@ -460,6 +460,14 @@ if (this.filterCategory) {
   methods: {
     getProductInitials(name) {
       return name.split(' ').map(word => word[0]).join('').toUpperCase().substring(0, 2);
+    },
+    
+    truncateDescription(description) {
+      if (!description) return '';
+      if (description.length > 80) {
+        return description.substring(0, 80) + '...';
+      }
+      return description;
     },
     
     getSizeStockStatus(size) {
@@ -742,7 +750,7 @@ if (this.filterCategory) {
 
 .product-table th {
   text-align: left;
-  padding: 18px 20px;
+  padding: 16px 20px;
   font-size: 14px;
   font-weight: 600;
   color: #4a7c6d;
@@ -751,8 +759,9 @@ if (this.filterCategory) {
 }
 
 .product-table td {
-  padding: 18px 20px;
+  padding: 12px 20px;
   border-bottom: 1px solid #f0f9f5;
+  vertical-align: top;
 }
 
 .product-table tr:last-child td {
@@ -763,16 +772,21 @@ if (this.filterCategory) {
   background-color: #f7fcf9;
 }
 
-/* Product Info Column */
-.product-info {
+/* Product Column - FIXED */
+.product-col {
+  width: 300px;
+}
+
+.product-content {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
 }
 
 .avatar {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
   border-radius: 50%;
   background: linear-gradient(135deg, #1a7d5e 0%, #0a3c2b 100%);
   display: flex;
@@ -780,18 +794,33 @@ if (this.filterCategory) {
   justify-content: center;
   color: white;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
-.product-details .product-name {
+.product-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.product-name {
   font-weight: 600;
   color: #0a3c2b;
   font-size: 15px;
+  line-height: 1.3;
+  margin-bottom: 4px;
 }
 
-.product-details .product-description {
-  font-size: 14px;
+.product-description {
+  font-size: 13px;
   color: #4a7c6d;
+  line-height: 1.3;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
 }
 
 /* Badges */
@@ -910,50 +939,6 @@ if (this.filterCategory) {
   color: #0a3c2b;
   font-weight: 600;
   font-size: 15px;
-}
-
-/* Price Input */
-.input-with-prefix {
-  position: relative;
-}
-
-.input-with-prefix .prefix {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #1a7d5e;
-  font-weight: 600;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.input-with-prefix .price-input {
-  padding-left: 32px; /* Add sufficient padding for the peso sign */
-  width: 100%;
-}
-
-/* Ensure the input has proper styling */
-.price-input {
-  width: 100%;
-  padding: 10px 12px 10px 32px; /* Left padding to accommodate the peso sign */
-  border: 1px solid #c8e6d9;
-  border-radius: 8px;
-  font-size: 14px;
-  transition: all 0.2s;
-  color: #0a3c2b;
-  background: white;
-  box-sizing: border-box;
-}
-
-.price-input:focus {
-  outline: none;
-  border-color: #1a7d5e;
-  box-shadow: 0 0 0 3px rgba(26, 125, 94, 0.1);
-}
-
-.price-input::placeholder {
-  color: #7aa895;
 }
 
 /* Action Buttons */
@@ -1575,7 +1560,7 @@ textarea.form-input {
     padding: 12px 8px;
   }
   
-  .product-info {
+  .product-content {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;

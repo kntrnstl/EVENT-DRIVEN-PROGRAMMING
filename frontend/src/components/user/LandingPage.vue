@@ -216,7 +216,7 @@ onUnmounted(() => {
             <h1>Step into Style with Oning Flip!</h1>
             <p class="tagline">The perfect pair for every journey. Discover our exclusive shoe collection.</p>
             <button class="btn-shop-now" @click="navigateTo('products')">
-              Find Your Next Pair &rarr;
+              Find Your Next Pair
             </button>
           </div>
         </section>

@@ -67,7 +67,6 @@
               <option value="preparing">Preparing</option>
               <option value="out for delivery">Out for Delivery</option>
               <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
             </select>
           </div>
           <!-- Items Per Page -->
@@ -432,7 +431,7 @@ export default {
 }
 
 .summary-value {
-  text-align: center;;
+  text-align: center;
   font-size: 28px;
   font-weight: 700;
   color: #0a3c2b;
@@ -592,7 +591,7 @@ export default {
 }
 
 .col-items {
-  min-width: 200px;
+  min-width: 250px;
 }
 
 .col-status {
@@ -603,6 +602,14 @@ export default {
   width: 80px;
   text-align: center;
 }
+
+.col-actions .btn-action {
+  margin-left: 6px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 
 /* Order Info */
 .order-id {
@@ -623,7 +630,7 @@ export default {
   font-size: 15px;
 }
 
-/* Inner Table */
+/* FIXED Inner Table with Slightly Adjusted Column Sizes */
 .inner-table-container { 
   max-height: 180px; 
   overflow-y: auto; 
@@ -636,11 +643,14 @@ export default {
   width: 100%; 
   border-collapse: collapse; 
   font-size: 0.85rem; 
+  table-layout: fixed; /* This fixes the column widths */
 }
 
 .inner-table th, .inner-table td { 
   padding: 8px 10px; 
   text-align: left;
+  vertical-align: top;
+  overflow: hidden;
 }
 
 .inner-table thead { 
@@ -650,8 +660,45 @@ export default {
   top: 0; 
 }
 
+/* SLIGHTLY ADJUSTED column widths */
+.inner-table th:nth-child(1),
+.inner-table td:nth-child(1) {
+  width: 62%; /* Slightly increased from 60% */
+  min-width: 155px;
+}
+
+.inner-table th:nth-child(2),
+.inner-table td:nth-child(2) {
+  width: 65%; /* Slightly adjusted */
+  min-width: 55px;
+  text-align: center;
+}
+
+.inner-table th:nth-child(3),
+.inner-table td:nth-child(3) {
+  width: 17%; /* Slightly reduced from 20% */
+  min-width: 45px;
+  text-align: center;
+}
+
+/* Handle long product names with ellipsis */
+.inner-table td:first-child {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .qty-col {
   text-align: center;
+  font-weight: 600;
+}
+
+/* Handle long product names with ellipsis */
+.product-name {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Status Dropdown */
@@ -720,6 +767,7 @@ export default {
   color: #4a7c6d;
   margin: 0 auto;
 }
+
 
 .btn-action:hover {
   background: #f0f9f5;
@@ -862,21 +910,6 @@ export default {
   border-left: 4px solid #f56565;
 }
 
-.custom-notif.pending { 
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  border-left: 4px solid #fbbf24;
-}
-
-.custom-notif.info { 
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  border-left: 4px solid #60a5fa;
-}
-
-.custom-notif.delivery { 
-  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-  border-left: 4px solid #a78bfa;
-}
-
 .notif-content {
   display: flex;
   align-items: center;
@@ -953,6 +986,12 @@ export default {
   .pagination-btn {
     padding: 8px 12px;
     font-size: 13px;
+  }
+  
+  .product-col,
+  .size-col,
+  .qty-col {
+    min-width: auto;
   }
 }
 </style>

@@ -124,28 +124,29 @@ export default {
       this.showPassword = false;
     },
     async register() {
-      try {
-        const res = await axios.post('/api/auth/register', {
-          username: this.username,
-          email: this.email,
-          password: this.password
-        });
+        try {
+          const res = await axios.post('/api/auth/register', {
+            username: this.username,
+            email: this.email,
+            password: this.password
+          });
 
-        this.message = "Verification code sent to your email!";
-        this.messageType = "success";
+          this.message = "Verification code sent to your email!";
+          this.messageType = "success";
 
-        // Redirect to verify page and save email
-        localStorage.setItem("pendingEmail", this.email);
+          // Make sure these match what your backend expects
+          localStorage.setItem("pendingEmail", this.email);
+          localStorage.setItem("pendingUser", JSON.stringify(res.data.user)); // Store user data if needed
 
-        setTimeout(() => {
-          this.router.push("/verify");
-        }, 800);
+          setTimeout(() => {
+            this.$router.push("/verify");
+          }, 800);
 
-      } catch (err) {
-        this.message = err.response?.data?.message || 'Error registering';
-        this.messageType = 'error';
-      }
-    },
+        } catch (err) {
+          this.message = err.response?.data?.message || 'Error registering';
+          this.messageType = 'error';
+        }
+      },
 
     async login() {
       try {

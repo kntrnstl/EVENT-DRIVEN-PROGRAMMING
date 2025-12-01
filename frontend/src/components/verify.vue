@@ -65,8 +65,7 @@
 </template>
 
 <script>
-// NOTE: axios is not defined in this environment, using fetch as a placeholder
-// import axios from "axios"; 
+import axios from 'axios';
 
 export default {
   name: 'EmailVerification',
@@ -99,60 +98,71 @@ export default {
         this.code = event.target.value.replace(/[^0-9]/g, '').substring(0, 6);
     },
 
-    async verifyEmail() {
-      if (this.code.length !== 6) {
-        this.message = "Verification code must be 6 digits.";
-        this.messageType = "error";
-        return;
-      }
-
-      this.message = "Verifying...";
-      this.messageType = "info";
-
-      try {
-        // --- Mock API Success Response (using fetch/setTimeout) ---
-        await new Promise(resolve => setTimeout(resolve, 800)); // Simulated network delay
-        const res = { data: { message: "Email verified successfully!", token: "dummy-jwt", user: { role: "user" } } };
-        // --- End Mock ---
-
-        this.message = res.data.message;
-        this.messageType = "success";
-
-        if (typeof localStorage !== 'undefined') {
-            localStorage.setItem("token", res.data.token);
-            localStorage.setItem("role", res.data.user.role);
-            localStorage.removeItem("pendingEmail");
+      async verifyEmail() {
+        if (this.code.length !== 6) {
+          this.message = "Verification code must be 6 digits.";
+          this.messageType = "error";
+          return;
         }
 
+        this.loading = true;
+        this.message = "Verifying...";
+        this.messageType = "info";
 
-        setTimeout(() => {
-          console.log("Navigation simulated.");
-        }, 1000);
+        try {
+          // REAL API CALL - use the same endpoint your backend provides
+          const res = await axios.post('/api/auth/verify', { // or /api/auth/verify-email
+            email: this.email,
+            code: this.code
+          });
 
-      } catch (err) {
-        this.message = "Verification failed. Check your code (Simulated Error)."; 
-        this.messageType = "error";
-      }
-    },
+          this.message = res.data.message;
+          this.messageType = "success";
 
-    async resendCode() {
-      this.message = "Requesting new code...";
-      this.messageType = "info";
+          // Store what your backend returns
+          localStorage.setItem("token", res.data.token);
+          localStorage.setItem("role", res.data.user.role);
+          localStorage.setItem("user", JSON.stringify(res.data.user));
+          localStorage.removeItem("pendingEmail");
 
-      try {
-        // --- Mock API Success Response (using fetch/setTimeout) ---
-        await new Promise(resolve => setTimeout(resolve, 800)); // Simulated network delay
-        const res = { data: { message: "New verification code sent!" } };
-        // --- End Mock ---
+          setTimeout(() => {
+            this.$router.push('/auth');
+          }, 1000);
 
-        this.message = res.data.message;
-        this.messageType = "success";
+        } catch (err) {
+          this.message = err.response?.data?.message || "Verification failed."; 
+          this.messageType = "error";
+        } finally {
+          this.loading = false;
+        }
+      },
 
-      } catch (err) {
-        this.message = "Could not resend code. Try again later. (Simulated Error)"; 
-        this.messageType = "error";
-      }
-    }
+          async resendCode() {
+            this.resendLoading = true;
+            this.message = "Sending new verification code...";
+            this.messageType = "info";
+
+            try {
+              console.log('Sending resend request for email:', this.email);
+              
+              const res = await axios.post('/api/auth/resend', {
+                email: this.email
+              });
+              
+              console.log('Resend response:', res.data);
+              this.message = res.data.message || "New verification code sent!";
+              this.messageType = "success";
+
+            } catch (err) {
+              console.error('Resend code error details:', err);
+              console.error('Error response:', err.response);
+              
+              this.message = err.response?.data?.message || "Failed to resend code.";
+              this.messageType = "error";
+            } finally {
+              this.resendLoading = false;
+            }
+          }
   }
 };
 </script>
